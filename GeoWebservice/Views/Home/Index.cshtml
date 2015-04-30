@@ -1,0 +1,76 @@
+﻿<div>
+    <p style="margin-top:4px;display:inline-block;color:darkgreen">You</p><p style="margin-top:4px;margin-left:235px;display:inline-block;color:darkred">Target</p><br />
+    <input type="text" id="latYou" style="margin-top:-4px;border-color:darkgreen;display:inline-block" readonly="readonly" size="9" /><input type="text" id="latTarget" style="margin-top:-4px;border-color:darkred;display:inline-block;margin-left:108px" readonly="readonly" size="9" /><br />
+    <input type="text" id="lonYou" style="margin-top:4px;border-color:darkgreen;display:inline-block" readonly="readonly" size="9" /><input type="text" id="lonTarget" style="margin-top:4px;border-color:darkred;display:inline-block;margin-left:108px" readonly="readonly" size="9" /><br />
+    <input type="text" id="altYou" style="margin-top:4px;border-color:darkgreen;display:inline-block" readonly="readonly" size="9" /><input type="text" id="altTarget" style="margin-top:4px;border-color:darkred;display:inline-block;margin-left:108px" readonly="readonly" size="9" /><br />
+
+    <div id="mapholder" style="position:absolute;margin-top:4px;z-index:-1"></div>
+    <canvas id="myCanvas" width="300" height="300" style="border:1px solid #d3d3d3;margin-top:4px"></canvas>    
+</div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript" language="javascript">
+    $(function () {
+        navigator.geolocation.watchPosition(showPosition, positionError);
+
+        var latTarget;
+        var lonTarget;       
+
+        function showPosition(position) {
+            // --- TARGET ---
+            $.ajax({
+                method: "GET",
+                url: "http://geowebservice.azurewebsites.net/Api/Geo",
+                dataType: 'xml',
+                success: function (response) {
+                    xmlParser(response);
+                }
+            });
+            // --- END TARGET ---
+
+            // --- YOU ---
+            var coordinates = position.coords;
+            $("#latYou").val(Math.round(coordinates.latitude * 10000) / 10000);
+            $("#lonYou").val(Math.round(coordinates.longitude * 10000) / 10000);
+            $("#altYou").val(Math.round(coordinates.altitude * 10000) / 10000);
+
+            var latlon = position.coords.latitude + "," + position.coords.longitude;
+            
+            var img_url
+
+            if (latTarget != null && lonTarget != null) {
+                img_url = "http://maps.googleapis.com/maps/api/staticmap?center=" + latlon + "&zoom=17&size=300x300&sensor=false&markers=color:green%7Clabel:YOU%7C" + position.coords.latitude + "," + position.coords.longitude + "&markers=color:red%7Clabel:Tar%7C" + latTarget + "," + lonTarget;
+
+            }
+            else {
+                img_url = "http://maps.googleapis.com/maps/api/staticmap?center=" + latlon + "&zoom=17&size=300x300&sensor=false&markers=color:green%7Clabel:YOU%7C" + position.coords.latitude + "," + position.coords.longitude;
+            }
+            
+            document.getElementById("mapholder").innerHTML = "<img src='" + img_url + "'>";
+            // --- END YOU ---
+
+            // --- ARROW ---
+            
+            
+            
+            // --- END ARROW ---
+        }
+
+        function xmlParser(response) {
+
+            latTarget = response.getElementsByTagName("Value")[1].childNodes[0].nodeValue;
+            lonTarget = response.getElementsByTagName("Value")[2].childNodes[0].nodeValue;
+            altTarget = response.getElementsByTagName("Value")[0].childNodes[0].nodeValue;
+
+            $("#latTarget").val(latTarget);
+            $("#lonTarget").val(lonTarget);
+            $("#altTarget").val(altTarget);
+        }
+
+        function positionError(position) {
+            $("#latYou").val("ooops! error");
+            $("#lonYou").val("ooops! error");
+            $("#altYou").val("ooops! error");
+        }
+        });
+</script>
+
